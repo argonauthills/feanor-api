@@ -27,6 +27,7 @@ export class API {
         const pathKeys = splitRoute(route)
         const actionPostRoute = joinRoute([...pathKeys, 'actions'])
         const actionInfoRoute = joinRoute([...pathKeys, 'actions', 'info'])
+        const typeSpecificActionFunc = actionFunctionBuilder(actionName, actionFunction)
 
         const isValid = getValidator(dataSchema)
 
@@ -38,7 +39,7 @@ export class API {
             }
 
             try {
-                const newState = actionFunction(this.state, data, req.params)
+                const newState = typeSpecificActionFunc(this.state, data, req.params)
                 this.updateState(newState)
                 return res.send("success")  //TODO: consider sending something better
             }
@@ -122,5 +123,12 @@ function normalInfo(item) {
 function actionInfo(item, actions) {
     return {
         actions: actions || []
+    }
+}
+
+function actionFunctionBuilder(actionName, actionFunction) {
+    return (state, action, params) => {
+        if (actionName !== action.type) return state
+        return actionFunction(state, action.payload, params)
     }
 }
